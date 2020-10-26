@@ -236,16 +236,17 @@ public interface RequestRepository extends PagingAndSortingRepository<Request, L
 
 - 적용 후 REST API 의 테스트
 ```
-# app 서비스의 주문처리
+# request 서비스의 접수처리
 http localhost:8081/requests memberId=10 qty=10
+![image](https://user-images.githubusercontent.com/68535067/97144102-36205d00-17a7-11eb-9b4b-8956467228d7.png)
 
+# request 서비스의 접수상태확인
+http localhost:8081/requests/2
+![image](https://user-images.githubusercontent.com/68535067/97144196-5f40ed80-17a7-11eb-8ace-5792c7b783d9.png)
 
-# store 서비스의 배달처리
-http localhost:8083/주문처리s orderId=1
-
-# 주문 상태 확인
-http localhost:8081/orders/1
-
+# delivery 서비스의 배달처리
+http put http://localhost:8083/deliveries/1 courierName="Lee" memberId=10 requestId=2 location="Ulsan City" status="Picked"
+![image](https://user-images.githubusercontent.com/68535067/97144626-22292b00-17a8-11eb-954b-10d50ed05a37.png)
 ```
 
 
@@ -360,6 +361,7 @@ public interface 결제이력Service {
 # 결제 (pay) 서비스를 잠시 내려놓음 (ctrl+c)
 
 #주문처리
+![image](https://user-images.githubusercontent.com/68535067/97143766-a4185480-17a6-11eb-9bb1-e2eff4e2cb04.png)
 http localhost:8081/orders item=통닭 storeId=1   #Fail
 http localhost:8081/orders item=피자 storeId=2   #Fail
 
