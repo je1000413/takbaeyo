@@ -391,17 +391,28 @@ public class PolicyHandler{
     public void wheneverDelivered_GetPointPol(@Payload Delivered delivered){
 
         if(delivered.isMe()){
+            int flag=0;
             Iterator<Point> iterator = pointRepository.findAll().iterator();
             while(iterator.hasNext()){
+
                 Point pointTmp = iterator.next();
                 if((pointTmp.getMemberId() == delivered.getMemberId()) && delivered.getStatus().equals("Finish")){
                     Optional<Point> PointOptional = pointRepository.findById(pointTmp.getId());
                     Point point = PointOptional.get();
                     point.setPoint(point.getPoint()+100);
                     pointRepository.save(point);
-
+                    flag=1;
                 }
+
             }
+
+            if (flag==0 && delivered.getStatus().equals("Finish")){
+                Point point = new Point();
+                point.setMemberId(delivered.getMemberId());
+                point.setPoint((long)100);
+                pointRepository.save(point);
+            }
+            System.out.println("##### listener GetPointPol : " + delivered.toJson());
         }
     }
 
@@ -420,18 +431,16 @@ http put http://localhost:8083/deliveries/1 courierName="Lee" memberId=10 reques
 ![image](https://user-images.githubusercontent.com/68535067/97149492-2ce7be00-17b0-11eb-9ade-c845abb1cb04.png)
 
 ```
-http localhost:8081/orders item=피자 storeId=2   #Success
 
-#주문상태 확인
-http localhost:8080/orders     # 주문상태 안바뀜 확인
-
-#상점 서비스 기동
-cd 상점
+#포인트 서비스 기동
+cd point
 mvn spring-boot:run
 
-#주문상태 확인
-http localhost:8080/orders     # 모든 주문의 상태가 "배송됨"으로 확인
+#포인트상태 확인(기동전/후)
+http localhost:8085/points     # 신규포인트 생성됨
 ```
+![image](https://user-images.githubusercontent.com/68535067/97152139-d41a2480-17b3-11eb-9ffe-f756331313dc.png)
+
 
 
 # 운영
