@@ -326,77 +326,100 @@ http localhost:8081/requests memberId=10 qty=10  #Success
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
-
-
-결제가 이루어진 후에 상점시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하여 상점 시스템의 처리를 위하여 결제주문이 블로킹 되지 않아도록 처리한다.
+배달이 왼료되어진 후에 포인트시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하여 포인트시스템의 처리를 위하여 접수/배달/결제가 블로킹 되지 않도록 처리한다.
  
-- 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+- 이를 위하여 배달이력에 기록을 남긴 후에 곧바로 배달완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
  
 ```
-package fooddelivery;
+package takbaeyo;
+
+import javax.persistence.*;
+import org.springframework.beans.BeanUtils;
+import java.util.List;
 
 @Entity
-@Table(name="결제이력_table")
-public class 결제이력 {
+@Table(name="Delivery_table")
+public class Delivery {
 
- ...
-    @PrePersist
-    public void onPrePersist(){
-        결제승인됨 결제승인됨 = new 결제승인됨();
-        BeanUtils.copyProperties(this, 결제승인됨);
-        결제승인됨.publish();
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+    private Long requestId;
+    private String status;
+    private String location;
+    private String courierName;
+    private Long memberId;
+
+    @PostUpdate
+    public void onPostUpdate(){
+        Delivered delivered = new Delivered();
+        BeanUtils.copyProperties(this, delivered);
+        delivered.publishAfterCommit();
     }
 
 }
-```
-- 상점 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+
 
 ```
-package fooddelivery;
+- 포인트 서비스에서는 배달완료 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
-...
+```
+package takbaeyo;
+
+import takbaeyo.config.kafka.KafkaProcessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Service;
+
+import java.util.Iterator;
+import java.util.Optional;
 
 @Service
 public class PolicyHandler{
+    @Autowired
+    PointRepository pointRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whenever결제승인됨_주문정보받음(@Payload 결제승인됨 결제승인됨){
+    public void onStringEventListener(@Payload String eventString){
 
-        if(결제승인됨.isMe()){
-            System.out.println("##### listener 주문정보받음 : " + 결제승인됨.toJson());
-            // 주문 정보를 받았으니, 요리를 슬슬 시작해야지..
-            
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverDelivered_GetPointPol(@Payload Delivered delivered){
+
+        if(delivered.isMe()){
+            Iterator<Point> iterator = pointRepository.findAll().iterator();
+            while(iterator.hasNext()){
+                Point pointTmp = iterator.next();
+                if((pointTmp.getMemberId() == delivered.getMemberId()) && delivered.getStatus().equals("Finish")){
+                    Optional<Point> PointOptional = pointRepository.findById(pointTmp.getId());
+                    Point point = PointOptional.get();
+                    point.setPoint(point.getPoint()+100);
+                    pointRepository.save(point);
+
+                }
+            }
         }
     }
 
 }
 
 ```
-실제 구현을 하자면, 카톡 등으로 점주는 노티를 받고, 요리를 마친후, 주문 상태를 UI에 입력할테니, 우선 주문정보를 DB에 받아놓은 후, 이후 처리는 해당 Aggregate 내에서 하면 되겠다.:
-  
-```
-  @Autowired 주문관리Repository 주문관리Repository;
-  
-  @StreamListener(KafkaProcessor.INPUT)
-  public void whenever결제승인됨_주문정보받음(@Payload 결제승인됨 결제승인됨){
-
-      if(결제승인됨.isMe()){
-          카톡전송(" 주문이 왔어요! : " + 결제승인됨.toString(), 주문.getStoreId());
-
-          주문관리 주문 = new 주문관리();
-          주문.setId(결제승인됨.getOrderId());
-          주문관리Repository.save(주문);
-      }
-  }
 
 ```
+포인트 시스템은 배달시스템과 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 포인트시스템이 유지보수로 인해 잠시 내려간 상태라도 배달하는데 문제가 없다
 
-상점 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 상점시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:
+# 포인트 서비스(point)를 잠시 내려놓음
+
+# 배달처리
+http put http://localhost:8083/deliveries/1 courierName="Lee" memberId=10 requestId=2 location="Seoul City" status="Finish"   #Success
 ```
-# 상점 서비스 (store) 를 잠시 내려놓음 (ctrl+c)
+![image](https://user-images.githubusercontent.com/68535067/97149492-2ce7be00-17b0-11eb-9ade-c845abb1cb04.png)
 
-#주문처리
-http localhost:8081/orders item=통닭 storeId=1   #Success
+```
 http localhost:8081/orders item=피자 storeId=2   #Success
 
 #주문상태 확인
