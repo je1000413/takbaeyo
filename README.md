@@ -441,6 +441,10 @@ http localhost:8085/points     # 신규포인트 생성됨
 ```
 ![image](https://user-images.githubusercontent.com/68535067/97152139-d41a2480-17b3-11eb-9ffe-f756331313dc.png)
 
+# CQRS 적용
+접수된 택배현황을 view로 구현함.
+
+![image](https://user-images.githubusercontent.com/68535067/97153350-b221a180-17b5-11eb-8bc6-8cf40e16fdca.png)
 
 
 # 운영
