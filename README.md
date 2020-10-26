@@ -238,16 +238,19 @@ public interface RequestRepository extends PagingAndSortingRepository<Request, L
 ```
 # request 서비스의 접수처리
 http localhost:8081/requests memberId=10 qty=10
+```
 ![image](https://user-images.githubusercontent.com/68535067/97144102-36205d00-17a7-11eb-9b4b-8956467228d7.png)
-
+```
 # request 서비스의 접수상태확인
 http localhost:8081/requests/2
+```
 ![image](https://user-images.githubusercontent.com/68535067/97144196-5f40ed80-17a7-11eb-8ace-5792c7b783d9.png)
-
+```
 # delivery 서비스의 배달처리
 http put http://localhost:8083/deliveries/1 courierName="Lee" memberId=10 requestId=2 location="Ulsan City" status="Picked"
-![image](https://user-images.githubusercontent.com/68535067/97144626-22292b00-17a8-11eb-954b-10d50ed05a37.png)
 ```
+![image](https://user-images.githubusercontent.com/68535067/97144626-22292b00-17a8-11eb-954b-10d50ed05a37.png)
+
 
 ## 동기식 호출과 Fallback 처리
 
@@ -304,22 +307,22 @@ public interface PaymentService {
 
 # 접수처리
 http localhost:8081/requests memberId=10 qty=10   #Fail
+```
 ![image](https://user-images.githubusercontent.com/68535067/97143766-a4185480-17a6-11eb-9bb1-e2eff4e2cb04.png)
-
-
+```
 # payment서비스 재기동
 cd payment
 mvn spring-boot:run
 
 #주문처리
 http localhost:8081/requests memberId=10 qty=10  #Success
+```
 ![image](https://user-images.githubusercontent.com/68535067/97144102-36205d00-17a7-11eb-9b4b-8956467228d7.png)
 
 ```
-
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
 
-
+```
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
