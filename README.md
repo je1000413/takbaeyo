@@ -110,8 +110,15 @@
 ### 이벤트 도출
 ![image](https://user-images.githubusercontent.com/69283675/97377944-87922e80-1904-11eb-9e86-ed04b9c9a826.png)
 
+```
+- 도메인 서열 분리 
+    - Core Domain:  request,  delivery : 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 request의 경우 1주일 1회 미만, delivery의 경우 1개월 1회 미만
+    - Supporting Domain:   delivery Dash Board, point : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
+    - General Domain:   Payment(결제) : 결제서비스로 3rd Party 외부 서비스를 사용하는 것이 경쟁력이 높음 (핑크색으로 이후 전환할 예정)
+```
+
 ## 헥사고날 아키텍처 다이어그램 도출
-![image](https://user-images.githubusercontent.com/68535067/97378814-9c6fc180-1906-11eb-946a-5c9c826a7af4.png)
+![image](https://user-images.githubusercontent.com/68535067/97379115-6252ef80-1907-11eb-9d35-f43a8a03b48f.png)
 
 
     - Chris Richardson, MSA Patterns 참고하여 Inbound adaptor와 Outbound adaptor를 구분함
