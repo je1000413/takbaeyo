@@ -44,7 +44,7 @@
     1. 고객이 배달상태를 시스템에서 확인할 수 있다  CQRS
     1. 배달이 완료되면 자동으로 포인트가 적립된다  Event driven
     
-![image](https://user-images.githubusercontent.com/69283675/97377944-87922e80-1904-11eb-9e86-ed04b9c9a826.png)
+
 
 
 # 체크포인트
@@ -109,7 +109,7 @@
 * MSAEz 로 모델링한 이벤트스토밍 결과: http://www.msaez.io/#/storming/lDc01C8D74YedeH39AqSkSqPoWI3/share/c84563094cddebd6bea82140e3fce52f/-MKI68IU8OMs49uIWAYw
 
 ### 이벤트 도출
-![image](https://user-images.githubusercontent.com/68535067/97139155-361b5f80-179d-11eb-99ed-3d589cc8b14a.png)
+![image](https://user-images.githubusercontent.com/69283675/97377944-87922e80-1904-11eb-9e86-ed04b9c9a826.png)
 
 ## 헥사고날 아키텍처 다이어그램 도출
 ![image](https://user-images.githubusercontent.com/68535067/97378814-9c6fc180-1906-11eb-946a-5c9c826a7af4.png)
