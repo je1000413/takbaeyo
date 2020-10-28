@@ -564,7 +564,8 @@ kubectl set image ...
 ```
 
 - seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
-![image](https://user-images.githubusercontent.com/68535067/97248284-cbbdfa00-1844-11eb-9c6e-d366a0b0c61d.png)
+![image](https://user-images.githubusercontent.com/68535067/97380473-74825d00-190a-11eb-9afd-8def71948ee9.png)
+
 
 배포기간중 Availability 가 평소 100%에서 60% 대로 떨어지는 것을 확인. 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
 
