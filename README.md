@@ -604,6 +604,9 @@ kubectl apply -f kubernetes/deployment.yaml
 ![image](https://user-images.githubusercontent.com/68535067/97378359-8ad9ea00-1905-11eb-952d-641a380a02c9.png)
 
 ## Livness구현
+- POINT의 depolyment.yaml 소스설정
+- http get방식에서 tcp방식으로 변경, 서비스포트 8080이 아닌 고의로 8081로 포트  변경하여  
+![image](https://user-images.githubusercontent.com/68535067/97388731-08105980-191c-11eb-9c50-c7edace5cff5.png)
 -restart확인
 ![image](https://user-images.githubusercontent.com/68535067/97383715-93382200-1911-11eb-8db0-f1ad417ced41.png)
 
