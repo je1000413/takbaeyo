@@ -562,7 +562,23 @@ kubectl apply -f kubernetes/deployment.yaml
 
 
 
+## Configmap
+- configmap.yaml 파일설정
 
+![image](https://user-images.githubusercontent.com/68535067/97378420-a8a74f00-1905-11eb-94e6-f76f9e9fda40.png)
+
+- deployment.yaml파일 설정
+![image](https://user-images.githubusercontent.com/68535067/97378494-c8d70e00-1905-11eb-8e8e-208ade4772fe.png)
+
+- application.yaml 파일 설정
+![image](https://user-images.githubusercontent.com/68535067/97378559-edcb8100-1905-11eb-804d-e8c61afed969.png)
+
+- paymentService 파일 설정
+![image](https://user-images.githubusercontent.com/68535067/97378637-28351e00-1906-11eb-8774-98d9dd0eee0e.png)
+
+
+- 80포트로 설정하여 테스트
+![image](https://user-images.githubusercontent.com/68535067/97378359-8ad9ea00-1905-11eb-952d-641a380a02c9.png)
 
 
 
