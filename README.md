@@ -603,7 +603,15 @@ kubectl apply -f kubernetes/deployment.yaml
 - 80포트로 설정하여 테스트
 ![image](https://user-images.githubusercontent.com/68535067/97378359-8ad9ea00-1905-11eb-952d-641a380a02c9.png)
 
+## Livness구현
+-restart확인
+![image](https://user-images.githubusercontent.com/68535067/97383715-93382200-1911-11eb-8db0-f1ad417ced41.png)
 
+- describe 확인
+![image](https://user-images.githubusercontent.com/68535067/97383827-d4c8cd00-1911-11eb-8cc6-03ac56635131.png)
+
+- 원복후 정상 확인
+![image](https://user-images.githubusercontent.com/68535067/97384522-3178b780-1913-11eb-8625-a2bb3ae953b7.png)
 
 
 
