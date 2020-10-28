@@ -37,7 +37,7 @@
 1. 트랜잭션
     1. 결제가 되지 않은 접수건은 아예 거래가 성립되지 않아야 한다  Sync 호출 
 1. 장애격리
-    1. 배달 기능이 수행되지 않더라도 접수는 365일 24시간 받을 수 있어야 한다  Async (event-driven), Eventual Consistency
+    1. 포인트 기능이 수행되지 않더라도 접수는 365일 24시간 받을 수 있어야 한다  Async (event-driven), Eventual Consistency
     1. 결제시스템이 과중되면 사용자를 잠시동안 받지 않고 결제를 잠시후에 하도록 유도한다  Circuit breaker, fallback
 1. 성능
     1. 고객이 배달상태를 시스템에서 확인할 수 있다  CQRS
