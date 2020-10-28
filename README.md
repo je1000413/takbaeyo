@@ -537,7 +537,8 @@ kubectl autoscale deploy payment --min=1 --max=10 --cpu-percent=15
 
 - CB 에서 했던 방식대로 워크로드를 2분 동안 걸어준다.
 ```
-siege -c100 -t120S -r10 --content-type "application/json" 'http://localhost:8081/orders POST {"item": "chicken"}'
+siege -c100 -t120S -r10 --content-type "application/json" 'http://request:8080/requests POST {"memberId": "100", "qty":5}'
+
 ```
 - 오토스케일이 어떻게 되고 있는지 모니터링을 걸어둔다:
 ```
@@ -555,7 +556,8 @@ kubectl get deploy pay -w
 
 - seige 로 배포작업 직전에 워크로드를 모니터링 함.
 ```
-siege -c100 -t120S -r10 --content-type "application/json" 'http://localhost:8081/orders POST {"item": "chicken"}'
+siege -c100 -t120S -r10 --content-type "application/json" 'http://request:8080/requests POST {"memberId": "100", "qty":5}'
+
 ```
 
 - 새버전으로의 배포 시작
@@ -564,7 +566,7 @@ kubectl set image ...
 ```
 
 - seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
-![image](https://user-images.githubusercontent.com/68535067/97380473-74825d00-190a-11eb-9afd-8def71948ee9.png)
+![image](https://user-images.githubusercontent.com/68535067/97380841-36396d80-190b-11eb-8aa9-0d1e4efbcd11.png)
 
 
 배포기간중 Availability 가 평소 100%에서 60% 대로 떨어지는 것을 확인. 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
