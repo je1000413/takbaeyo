@@ -111,12 +111,10 @@
 
 ## 이벤트 도출
 ### 1차 이벤트스토밍 결과
-
 ![image](https://user-images.githubusercontent.com/75401933/100964027-11b85d00-356b-11eb-97b0-abd00e78c2c6.png)
 
 ### 최종 이벤트스토밍 결과
-
-///이미지 들어갈 자리
+![image](https://user-images.githubusercontent.com/45473909/105028232-1d68d000-5a94-11eb-97f8-6ece48856427.png)
 
 ```
 - 도메인 서열 분리 
