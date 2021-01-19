@@ -265,14 +265,14 @@ http POST localhost:8088/visits matchId=5000 teacher=TEACHER visitDate=21/01/21
 
 ## 동기식 호출과 Fallback 처리
 
-분석단계에서의 조건 중 하나로 접수(match)->결제(payment) 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다. 
+분석단계에서의 조건 중 하나로 접수(match)->결제(payment) 간의 호출은 동기식으로 호출하고자  동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다. 
 
 - 결제서비스를 호출하기 위하여 FeignClient 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
 
 ```
 # (payment) PaymentService.java
 
-package takbaeyo.external;
+package matching.external;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -281,32 +281,36 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Date;
 
-@FeignClient(name="payment", url="${api.url.payment}")
+@FeignClient(name="payment", url="${api.payment.url}")
 public interface PaymentService {
 
     @RequestMapping(method= RequestMethod.POST, path="/payments")
-    public void dopay(@RequestBody Payment payment);
+    public void paymentRequest(@RequestBody Payment payment);
 
 }
 ```
 
-- 접수를 받은 직후(@PostPersist) 결제를 요청하도록 처리
+- match접수를 받은 직후(@PostPersist) 결제를 요청하도록 처리
 ```
-# Request.java (Entity)
+# match.java (Entity)
   @PostPersist
     public void onPostPersist(){
-        Requested requested = new Requested();
-        BeanUtils.copyProperties(this, requested);
-        requested.publishAfterCommit();
-        takbaeyo.external.Payment payment = new takbaeyo.external.Payment();
-        payment.setRequestId(this.getId());
-        payment.setMemberId(this.getMemberId());
-        payment.setStatus("Paid");
-        
-        // mappings goes here
-        RequestApplication.applicationContext.getBean(takbaeyo.external.PaymentService.class)
-            .dopay(payment);
+        MatchRequested matchRequested = new MatchRequested();
+        BeanUtils.copyProperties(this, matchRequested);
+        matchRequested.publishAfterCommit();
 
+        //Following code causes dependency to external APIs
+        // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
+        Payment payment = new Payment();
+        // mappings goes here
+
+        //변수 setting
+        payment.setMatchId(Long.valueOf(this.getId()));
+        payment.setPrice(Integer.valueOf(this.getPrice()));
+        payment.setPaymentAction("Approved");
+
+        MatchApplication.applicationContext.getBean(PaymentService.class)
+                .paymentRequest(payment);
     }
 ```
 
@@ -321,6 +325,7 @@ http localhost:8088/matches id=5005 price=50000 status=matchRequest   #Fail
 ```
 ![11 payment내리면match안됨](https://user-images.githubusercontent.com/45473909/105013488-a7a83880-5a82-11eb-9417-92d92668b879.PNG)
 ```
+
 # payment서비스 재기동
 cd payment
 mvn spring-boot:run
@@ -366,7 +371,6 @@ public class Delivery {
         BeanUtils.copyProperties(this, delivered);
         delivered.publishAfterCommit();
     }
-
 }
 
 
