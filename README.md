@@ -114,9 +114,9 @@
 
 ```
 - 도메인 서열 분리 
-    - Core Domain:  request,  delivery : 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 request의 경우 1주일 1회 미만, delivery의 경우 1개월 1회 미만
-    - Supporting Domain:   delivery Dash Board, point : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
-    - General Domain:   Payment(결제) : 결제서비스로 3rd Party 외부 서비스를 사용하는 것이 경쟁력이 높음 (핑크색으로 이후 전환할 예정)
+    - Core Domain:  match, visit  : 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 match의 경우 1주일 1회 미만, visit의 경우 1개월 1회 미만
+    - Supporting Domain:  visitReqLists , myPages : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
+    - General Domain:   payment(결제) : 결제서비스로 3rd Party 외부 서비스를 사용하는 것이 경쟁력이 높음
 ```
 
 ## 헥사고날 아키텍처 다이어그램 도출
@@ -156,96 +156,89 @@ mvn spring-boot:run
 - 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: (예시는 request 마이크로 서비스). 이때 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용하였고, 모든 구현에 있어서 영문으로 사용하여 별다른  오류없이 구현하였다.
 
 ```
-package takbaeyo;
+package matching;
 
 import javax.persistence.*;
+
+import matching.external.Payment;
+import matching.external.PaymentService;
 import org.springframework.beans.BeanUtils;
 import java.util.List;
 
 @Entity
-@Table(name="Request_table")
-public class Request {
+@Table(name="Match_table")
+public class Match {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
-    private Long memberId;
-    private Long qty;
-    private String status="Registered";
+    private Integer price;
+    private String status;
 
     @PostPersist
     public void onPostPersist(){
-        Requested requested = new Requested();
-        BeanUtils.copyProperties(this, requested);
-        requested.publishAfterCommit();
+        MatchRequested matchRequested = new MatchRequested();
+        BeanUtils.copyProperties(this, matchRequested);
+        matchRequested.publishAfterCommit();
 
         //Following code causes dependency to external APIs
         // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
-
-        takbaeyo.external.Payment payment = new takbaeyo.external.Payment();
-        payment.setRequestId(this.getId());
-        payment.setMemberId(this.getMemberId());
-        payment.setStatus("Paid");
-
+        Payment payment = new Payment();
         // mappings goes here
-        RequestApplication.applicationContext.getBean(takbaeyo.external.PaymentService.class)
-            .dopay(payment);
 
+        //변수 setting
+        payment.setMatchId(Long.valueOf(this.getId()));
+        payment.setPrice(Integer.valueOf(this.getPrice()));
+        payment.setPaymentAction("Approved");
+
+        MatchApplication.applicationContext.getBean(PaymentService.class)
+                .paymentRequest(payment);
     }
 
     @PreUpdate
     public void onPreUpdate(){
-        ReqCanceled reqCanceled = new ReqCanceled();
-        BeanUtils.copyProperties(this, reqCanceled);
-        reqCanceled.publishAfterCommit();
+        if("cancel".equals(status)) {
+            MatchCanceled matchCanceled = new MatchCanceled();
+            BeanUtils.copyProperties(this, matchCanceled);
+            matchCanceled.publishAfterCommit();
+        }
     }
 
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-    public Long getMemberId() {
-        return memberId;
+
+    public Integer getPrice() {
+        return price;
+    }
+    public void setPrice(Integer price) {
+        this.price = price;
     }
 
-    public void setMemberId(Long memberId) {
-        this.memberId = memberId;
-    }
-    public Long getQty() {
-        return qty;
-    }
-
-    public void setQty(Long qty) {
-        this.qty = qty;
-    }
-    public String getStatus() {
-        return status;
-    }
-
+    public String getStatus() { return status; }
     public void setStatus(String status) {
         this.status = status;
     }
-
 }
+
 
 
 ```
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
 ```
-package takbaeyo;
+package matching;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface RequestRepository extends PagingAndSortingRepository<Request, Long>{
+public interface MatchRepository extends PagingAndSortingRepository<Match, Long>{
 }
 ```
 
 - 적용 후 REST API 의 테스트
 ```
-# request 서비스의 접수처리
+# match 서비스의 접수처리
 http localhost:8081/requests memberId=10 qty=10
 ```
 ![image](https://user-images.githubusercontent.com/68535067/97144102-36205d00-17a7-11eb-9b4b-8956467228d7.png)
