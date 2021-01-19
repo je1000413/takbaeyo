@@ -109,8 +109,14 @@
 ## Event Storming 결과
 * MSAEz 로 모델링한 이벤트스토밍 결과: http://msaez.io/#/storming/nZJ2QhwVc4NlVJPbtTkZ8x9jclF2/every/a77281d704710b0c2e6a823b6e6d973a/-M5AV2z--su_i4BfQfeF
 
-### 이벤트 도출
-![image](https://user-images.githubusercontent.com/69283675/97377944-87922e80-1904-11eb-9e86-ed04b9c9a826.png)
+## 이벤트 도출
+### 1차 이벤트스토밍 결과
+
+![image](https://user-images.githubusercontent.com/75401933/100964027-11b85d00-356b-11eb-97b0-abd00e78c2c6.png)
+
+### 최종 이벤트스토밍 결과
+
+///이미지 들어갈 자리
 
 ```
 - 도메인 서열 분리 
