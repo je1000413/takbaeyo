@@ -1,11 +1,10 @@
 # 택배시스템
 본 프로그램은 택배시스템이다.
 - 체크포인트 : https://workflowy.com/s/assessment-check-po/T5YrzcMewfo4J6LW
-![헥사고날아키텍처_v0 1_210115](https://user-images.githubusercontent.com/45473909/105006604-3b293b80-5a7a-11eb-87c5-f63cdfea8a0f.png)
 
 # Table of contents
 
-- [택배시스템](#---)
+- [선생님 매칭 시스템](#---)
   - [서비스 시나리오](#서비스-시나리오)
   - [체크포인트](#체크포인트)
   - [분석/설계](#분석설계)
@@ -131,23 +130,22 @@
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트와 파이선으로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 808n 이다)
 
 ```
-cd apigate
+
+cd gateway
 mvn spring-boot:run
 
-cd delivery
+cd match
 mvn spring-boot:run 
-
-cd deliveryboard
-mvn spring-boot:run  
 
 cd payment
+mvn spring-boot:run  
+
+cd visit
 mvn spring-boot:run 
 
-cd point
+cd mypage
 mvn spring-boot:run 
 
-cd request
-mvn spring-boot:run 
 ```
 
 ## DDD 의 적용
@@ -638,7 +636,7 @@ kubectl apply -f kubernetes/deployment.yaml
 
 ## 헥사고날 아키텍처 변화 
 
-![image](https://user-images.githubusercontent.com/487999/79685243-1d704100-8272-11ea-8ef6-f4869c509996.png)
+![헥사고날아키텍처_v0 1_210115](https://user-images.githubusercontent.com/45473909/105006604-3b293b80-5a7a-11eb-87c5-f63cdfea8a0f.png)
 
 ## 구현  
 
