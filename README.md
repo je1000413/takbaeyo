@@ -261,8 +261,7 @@ http localhost:8088/payments/5000
 http POST localhost:8088/visits matchId=5000 teacher=TEACHER visitDate=21/01/21
 ```
 ![6 visit에서선생님방문계획작성](https://user-images.githubusercontent.com/45473909/105011436-4aab8300-5a80-11eb-8d3e-5fbe98a20668.PNG)
-```
-```
+
 
 ## 동기식 호출과 Fallback 처리
 
