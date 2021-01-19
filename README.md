@@ -262,7 +262,7 @@ http POST localhost:8088/visits matchId=5000 teacher=TEACHER visitDate=21/01/21
 ```
 ![6 visit에서선생님방문계획작성](https://user-images.githubusercontent.com/45473909/105011436-4aab8300-5a80-11eb-8d3e-5fbe98a20668.PNG)
 ```
-
+```
 
 ## 동기식 호출과 Fallback 처리
 
@@ -333,7 +333,7 @@ http localhost:8088/matches id=5006 price=50000 status=matchRequest  #Success
 ```
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
 
-```
+
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
