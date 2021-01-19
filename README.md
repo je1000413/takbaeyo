@@ -339,46 +339,43 @@ http localhost:8088/matches id=5006 price=50000 status=matchRequest  #Success
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
-배달이 왼료되어진 후에 포인트시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하여 포인트시스템의 처리를 위하여 접수/배달/결제가 블로킹 되지 않도록 처리한다.
+결제요청이 완료 된 후에 방문매칭 시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하며, 방문매칭시스템의 처리를 위하여 매칭요청/결제가 블로킹 되지 않도록 처리한다.
  
-- 이를 위하여 배달이력에 기록을 남긴 후에 곧바로 배달완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+- 이를 위하여 결제요청이력에 기록을 남긴 후에 곧바로 결제 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
  
 ```
-package takbaeyo;
+package matching;
 
 import javax.persistence.*;
 import org.springframework.beans.BeanUtils;
 import java.util.List;
 
 @Entity
-@Table(name="Delivery_table")
-public class Delivery {
+@Table(name="Payment_table")
+public class Payment {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long id;
-    private Long requestId;
-    private String status;
-    private String location;
-    private String courierName;
-    private Long memberId;
+    private Long matchId;
+    private Integer price;
+    private String paymentAction;
 
-    @PostUpdate
-    public void onPostUpdate(){
-        Delivered delivered = new Delivered();
-        BeanUtils.copyProperties(this, delivered);
-        delivered.publishAfterCommit();
+    @PostPersist
+    public void onPostPersist(){
+        PaymentApproved paymentApproved = new PaymentApproved();
+        BeanUtils.copyProperties(this, paymentApproved);
+        paymentApproved.publishAfterCommit();
+
+
     }
-}
 
 
 ```
-- 포인트 서비스에서는 배달완료 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+- 방문 서비스에서는 결제완료 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
 ```
-package takbaeyo;
+package matching;
 
-import takbaeyo.config.kafka.KafkaProcessor;
+import matching.config.kafka.KafkaProcessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -386,13 +383,10 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-import java.util.Iterator;
-import java.util.Optional;
-
 @Service
 public class PolicyHandler{
-    @Autowired
-    PointRepository pointRepository;
+    @Autowired VisitReqListRepository VisitReqListRepository;
+    @Autowired VisitRepository VisitRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
     public void onStringEventListener(@Payload String eventString){
@@ -400,60 +394,56 @@ public class PolicyHandler{
     }
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void wheneverDelivered_GetPointPol(@Payload Delivered delivered){
+    public void wheneverPaymentApproved_(@Payload PaymentApproved paymentApproved){
 
-        if(delivered.isMe()){
-            int flag=0;
-            Iterator<Point> iterator = pointRepository.findAll().iterator();
-            while(iterator.hasNext()){
+        if(paymentApproved.isMe()){
+            System.out.println("##### listener  : " + paymentApproved.toJson());
 
-                Point pointTmp = iterator.next();
-                if((pointTmp.getMemberId() == delivered.getMemberId()) && delivered.getStatus().equals("Finish")){
-                    Optional<Point> PointOptional = pointRepository.findById(pointTmp.getId());
-                    Point point = PointOptional.get();
-                    point.setPoint(point.getPoint()+100);
-                    pointRepository.save(point);
-                    flag=1;
-                }
 
-            }
+            //승인완료 시 승인완료된 리스트를 visitReqList에 받아서 보여줄 수 있도록 id setting
 
-            if (flag==0 && delivered.getStatus().equals("Finish")){
-                Point point = new Point();
-                point.setMemberId(delivered.getMemberId());
-                point.setPoint((long)100);
-                pointRepository.save(point);
-            }
-            System.out.println("##### listener GetPointPol : " + delivered.toJson());
+            VisitReqList visitReqList = new VisitReqList();
+
+            visitReqList.setId(paymentApproved.getMatchId());
+            VisitReqListRepository.save(visitReqList);
+
         }
     }
 
-}
-
 ```
 
 ```
-포인트 시스템은 배달시스템과 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 포인트시스템이 유지보수로 인해 잠시 내려간 상태라도 배달하는데 문제가 없다
+방문 시스템은 결제시스템과 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 방문 시스템이 유지보수로 인해 잠시 내려간 상태라도 배달하는데 문제가 없다
 
-# 포인트 서비스(point)를 잠시 내려놓음
+# 방문 서비스(visits)를 잠시 내려놓음
 
-# 배달처리
-http put http://localhost:8083/deliveries/1 courierName="Lee" memberId=10 requestId=2 location="Seoul City" status="Finish"   #Success
+# 매칭 요청 처리
+http POST http://localhost:8081/matches id=101 price=5000 status=matchRequest   #Success
 ```
-![image](https://user-images.githubusercontent.com/68535067/97149492-2ce7be00-17b0-11eb-9ade-c845abb1cb04.png)
+![image](https://user-images.githubusercontent.com/75401910/105030156-bd275d80-5a96-11eb-87d0-7c16955c76ff.PNG)
+
+```
+# 결제승인
+http http://localhost:8083/payments   #Success
+```
+![image](https://user-images.githubusercontent.com/75401910/105031002-fe6c3d00-5a97-11eb-8ac3-03295405ba7c.PNG)
 
 ```
 
-#포인트 서비스 기동
-cd point
+
+
+#방문(visit) 서비스 기동
+cd visit
 mvn spring-boot:run
 
 #포인트상태 확인(기동전/후)
-http localhost:8085/points     # 신규포인트 생성됨
+http POST http://localhost:8082/visits matchId=101 teacher=Smith visitDate=20210101 # 신규 접수된 매칭요청건에 대해 선생님과 방문일자 매칭
+http localhost:8082/visits     # 신규방문매칭 생성됨
 ```
-![image](https://user-images.githubusercontent.com/68535067/97152139-d41a2480-17b3-11eb-9ffe-f756331313dc.png)
+![image](https://user-images.githubusercontent.com/75401910/105030335-fcee4500-5a96-11eb-869d-b36226c5f62e.PNG)
 
-# CQRS
+
+## CQRS
 
 매칭 상태가 변경될 때 마다 mypage에서 event를 수신하여 mypage의 매칭상태를 조회하도록 view를 구현하였다.  
 
@@ -533,11 +523,6 @@ public void wheneverMatchCanceled_(@Payload MatchCanceled matchCanceled){
 
     }
 }
-   
-```
-- mypage의 view로 조회
-
-![image](https://user-images.githubusercontent.com/75401933/105024191-21462380-5a8f-11eb-8abc-b169dd9d8c3a.png)
 
 
 
