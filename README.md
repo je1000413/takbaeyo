@@ -239,24 +239,30 @@ public interface MatchRepository extends PagingAndSortingRepository<Match, Long>
 - 적용 후 REST API 의 테스트
 ```
 # match 서비스의 접수처리
-http localhost:8081/requests memberId=10 qty=10
+http localhost:8088/matches id=5000 price=50000 status=matchRequest
 ```
-![image](https://user-images.githubusercontent.com/68535067/97144102-36205d00-17a7-11eb-9b4b-8956467228d7.png)
+![1 match에서명령어날림](https://user-images.githubusercontent.com/45473909/105010823-898d0900-5a7f-11eb-82b3-ab7163311364.PNG)
 ```
-# request 서비스의 접수상태확인
-http localhost:8081/requests/2
+# match 서비스의 접수상태확인
+http localhost:8088/matches/5000
 ```
-![image](https://user-images.githubusercontent.com/68535067/97144196-5f40ed80-17a7-11eb-8ace-5792c7b783d9.png)
+![2 match테이블에쌓임](https://user-images.githubusercontent.com/45473909/105010828-8b56cc80-5a7f-11eb-8a8e-9a96984d6ab6.PNG)
 ```
-# delivery 서비스의 배달처리
-http put http://localhost:8083/deliveries/1 courierName="Lee" memberId=10 requestId=2 location="Ulsan City" status="Picked"
+# payment 서비스의 상태확인
+http localhost:8088/payments/5000
 ```
-![image](https://user-images.githubusercontent.com/68535067/97144626-22292b00-17a8-11eb-954b-10d50ed05a37.png)
+![3 payment에서match에서날린데이터확인](https://user-images.githubusercontent.com/45473909/105011427-48e1bf80-5a80-11eb-9c95-e3d2e760e931.PNG)
+```
+# match 서비스에 대한 visit 응답
+http POST localhost:8088/visits matchId=5000 teacher=TEACHER visitDate=21/01/21
+```
+![6 visit에서선생님방문계획작성](https://user-images.githubusercontent.com/45473909/105011436-4aab8300-5a80-11eb-8d3e-5fbe98a20668.PNG)
+```
 
 
 ## 동기식 호출과 Fallback 처리
 
-분석단계에서의 조건 중 하나로 접수(request)->결제(payment) 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다. 
+분석단계에서의 조건 중 하나로 접수(match)->결제(payment) 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다. 
 
 - 결제서비스를 호출하기 위하여 FeignClient 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
 
@@ -308,19 +314,18 @@ public interface PaymentService {
 # 결제 (payment) 서비스를 잠시 내려놓음 (ctrl+c)
 
 # 접수처리
-http localhost:8081/requests memberId=10 qty=10   #Fail
+http localhost:8088/matches id=5005 price=50000 status=matchRequest   #Fail
 ```
-![image](https://user-images.githubusercontent.com/68535067/97143766-a4185480-17a6-11eb-9bb1-e2eff4e2cb04.png)
+![11 payment내리면match안됨](https://user-images.githubusercontent.com/45473909/105013488-a7a83880-5a82-11eb-9417-92d92668b879.PNG)
 ```
 # payment서비스 재기동
 cd payment
 mvn spring-boot:run
 
-#주문처리
-http localhost:8081/requests memberId=10 qty=10  #Success
+#match 처리
+http localhost:8088/matches id=5006 price=50000 status=matchRequest  #Success
 ```
-![image](https://user-images.githubusercontent.com/68535067/97144102-36205d00-17a7-11eb-9b4b-8956467228d7.png)
-
+![11 payment올리면match됨](https://user-images.githubusercontent.com/45473909/105013494-a8d96580-5a82-11eb-95de-73a47f072920.PNG)
 ```
 - 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
 
