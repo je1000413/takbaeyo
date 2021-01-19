@@ -545,6 +545,46 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 ## Gateway
 
 ```
+server:
+  port: 8088
+
+---
+
+spring:
+  profiles: default
+  cloud:
+    gateway:
+      routes:
+        - id: match
+          uri: http://localhost:8081
+          predicates:
+            - Path=/matches/** 
+        - id: visit
+          uri: http://localhost:8082
+          predicates:
+            - Path=/visits/**,/visitReqLists/**
+        - id: payment
+          uri: http://localhost:8083
+          predicates:
+            - Path=/payments/** 
+        - id: mypage
+          uri: http://localhost:8084
+          predicates:
+            - Path=/myPages/**,/myPages/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+
+---
+
 spring:
   profiles: docker
   cloud:
@@ -567,6 +607,8 @@ spring:
           predicates:
             - Path=/myPages/**,/myPages/**
 ```
+
+
 
 
 # 운영
