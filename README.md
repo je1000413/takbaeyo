@@ -453,10 +453,92 @@ http localhost:8085/points     # 신규포인트 생성됨
 ```
 ![image](https://user-images.githubusercontent.com/68535067/97152139-d41a2480-17b3-11eb-9ffe-f756331313dc.png)
 
-# CQRS 적용
-접수된 택배현황을 view로 구현함.
+# CQRS
 
-![image](https://user-images.githubusercontent.com/68535067/97153350-b221a180-17b5-11eb-8bc6-8cf40e16fdca.png)
+매칭 상태가 변경될 때 마다 mypage에서 event를 수신하여 mypage의 매칭상태를 조회하도록 view를 구현하였다.  
+
+```
+# mypage > PolicyHandler.java
+
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverVisitCanceled_(@Payload VisitCanceled visitCanceled){
+
+    if(visitCanceled.isMe()){
+        System.out.println("##### listener  : " + visitCanceled.toJson());
+
+        MyPageRepository.findById(visitCanceled.getMatchId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverVisitCanceled_MyPageRepository.findById : exist" );
+            MyPage.setStatus(visitCanceled.getEventType());
+            MyPageRepository.save(MyPage);
+        });
+    }
+}
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverVisitAssigned_(@Payload VisitAssigned visitAssigned){
+
+    if(visitAssigned.isMe()){
+        System.out.println("##### listener wheneverVisitAssigned  : " + visitAssigned.toJson());
+
+        MyPageRepository.findById(visitAssigned.getMatchId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverVisitAssigned_MyPageRepository.findById : exist" );
+
+            MyPage.setStatus(visitAssigned.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+            MyPage.setTeacher(visitAssigned.getTeacher());
+            MyPage.setVisitDate(visitAssigned.getVisitDate());
+            MyPageRepository.save(MyPage);
+        });
+
+    }
+}
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverPaymentApproved_(@Payload PaymentApproved paymentApproved){
+
+    if(paymentApproved.isMe()){
+        System.out.println("##### listener  : " + paymentApproved.toJson());
+
+        MyPage mypage = new MyPage();
+        mypage.setId(paymentApproved.getMatchId());
+        mypage.setPrice(paymentApproved.getPrice());
+        mypage.setStatus(paymentApproved.getEventType());
+        MyPageRepository.save(mypage);
+    }
+}
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverPaymentCanceled_(@Payload PaymentCanceled paymentCanceled){
+
+    if(paymentCanceled.isMe()){
+        System.out.println("##### listener  : " + paymentCanceled.toJson());
+
+
+        MyPageRepository.findById(paymentCanceled.getMatchId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverPaymentCanceled_MyPageRepository.findById : exist" );
+
+            MyPage.setStatus(paymentCanceled.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+            MyPageRepository.save(MyPage);
+        });
+    }
+}
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverMatchCanceled_(@Payload MatchCanceled matchCanceled){
+
+    if(matchCanceled.isMe()){
+        System.out.println("##### listener  : " + matchCanceled.toJson());
+
+        MyPageRepository.findById(matchCanceled.getId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverMatchCanceled_MyPageRepository.findById : exist" );
+
+            MyPage.setStatus(matchCanceled.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+            MyPageRepository.save(MyPage);
+        });
+
+    }
+}
+   
+```
+- mypage의 view로 조회
+
+![image](https://user-images.githubusercontent.com/75401933/105024191-21462380-5a8f-11eb-8abc-b169dd9d8c3a.png)
+
 
 
 # gateway 적용
