@@ -608,6 +608,17 @@ spring:
             - Path=/myPages/**,/myPages/**
 ```
 
+- Gateway 서비스 실행 상태에서 8088과 8081로 각각 서비스 실행하였을 때 동일하게 match 서비스 실행되었다.
+```
+http localhost:8088/matches id=50 price=50000 status=matchRequest
+```
+![8088포트](https://user-images.githubusercontent.com/45473909/105039570-0f22b000-5aa4-11eb-9090-45662dcd79d0.PNG)
+
+```
+http localhost:8081/matches id=51 price=50000 status=matchRequest
+```
+![8081포트](https://user-images.githubusercontent.com/45473909/105039551-0a5dfc00-5aa4-11eb-86c0-c3fc63d5b0f6.PNG)
+
 
 
 
