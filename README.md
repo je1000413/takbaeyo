@@ -542,6 +542,33 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/x
 
 ```
 
+## Gateway
+
+```
+spring:
+  profiles: docker
+  cloud:
+    gateway:
+      routes:
+        - id: match
+          uri: http://match:8080
+          predicates:
+            - Path=/matches/** 
+        - id: visit
+          uri: http://visit:8080
+          predicates:
+            - Path=/visits/**,/visitReqLists/**
+        - id: payment
+          uri: http://payment:8080
+          predicates:
+            - Path=/payments/** 
+        - id: mypage
+          uri: http://mypage:8080
+          predicates:
+            - Path=/myPages/**,/myPages/**
+```
+
+
 # 운영
 
 ## CI/CD 설정 (수정필요)
